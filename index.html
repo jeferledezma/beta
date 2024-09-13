@@ -1,142 +1,120 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actividades y Hábitos</title>
-    <link rel="stylesheet" href="actividades.css">
+    <title>Calendar</title>
+    <link rel="stylesheet" href="calendarioss.css">
 </head>
 <body>
 
-<div class="header">
-    <h1 id="date-title">HÁBITOS - ACTIVIDADES</h1>
-    <a href="calendario.html" class="back-to-calendar">Volver al calendario</a>
+<div class="calendar-container">
+    <div class="header">
+        <button id="prev-month" onclick="changeMonth(-1)" disabled>&lt;</button>
+        <h1 id="month-year"></h1>
+        <button id="next-month" onclick="changeMonth(1)">&gt;</button>
+    </div>
+    <div class="note-section">
+        <input type="text" id="daily-note-input" placeholder="Añadir Nota del Dia">
+        <button onclick="promptForDay()">Add Note</button>
+    </div>
+    <table id="calendar"></table>
+
+ 
 </div>
 
-<div class="progress-container">
-    <div class="progress-bar" id="progress-bar"></div>
-</div>
-
-<div class="add-activity">
-    <a id="add-schedule-btn" class="button">Añadir Todo un Dia de Actividades</a>
-   
-
-
-<div id="activity-list"></div>
-
-
-<div class="add-activity2">
-<h2>Agrega una nueva actividad o habito</h2>
-<k>Selecciona la Hora</k>
-<input type="time" id="time-input">
-<k>Nombra la Actividad</k>
-<input type="text" id="activity-input" placeholder="Añadir actividad o hábito">
-<button onclick="addActivity()">Añadir Actividad</button>
-
-
-</div>
-</div>
 <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const day = parseInt(urlParams.get('day'));
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1;
-    const currentYear = currentDate.getFullYear();
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+    const notes = JSON.parse(localStorage.getItem('notes')) || {};
 
-    const dayKey = `${currentYear}-${currentMonth}-${day}`;
+    function renderCalendar() {
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+        const calendar = document.getElementById('calendar');
+        let daysHTML = "<tr>";
 
-    const dayOfWeekEnglish = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date(currentYear, currentMonth - 1, day));
-    const dayOfWeekSpanish = new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(new Date(currentYear, currentMonth - 1, day));
-    document.getElementById('date-title').innerHTML = `Day: ${dayOfWeekEnglish} (${dayOfWeekSpanish}) - ${day}/${currentMonth}/${currentYear}`;
+        const today = new Date().getDate();
+        const isCurrentMonth = currentYear === new Date().getFullYear() && currentMonth === new Date().getMonth();
 
-    document.getElementById('add-schedule-btn').href = `horario.html?day=${dayKey}`;
-
-    let activities = JSON.parse(localStorage.getItem(dayKey)) || [];
-
-    function addActivity() {
-        const time = document.getElementById('time-input').value;
-        const activityText = document.getElementById('activity-input').value;
-
-        if (time && activityText) {
-            activities.push({ time, activityText, note: '', completed: false });
-            saveActivities();
-            renderActivities();
-        }
-    }
-
-    function toggleActivity(index) {
-        activities[index].completed = !activities[index].completed;
-        saveActivities();
-        renderActivities();
-    }
-
-    function removeActivity(index) {
-        activities.splice(index, 1);
-        saveActivities();
-        renderActivities();
-    }
-
-    function addNoteToActivity(index) {
-        const note = prompt("Introduce una nota para esta actividad:");
-        if (note !== null) {
-            activities[index].note = note;
-            saveActivities();
-            renderActivities();
-        }
-    }
-
-    function saveActivities() {
-        localStorage.setItem(dayKey, JSON.stringify(activities));
-    }
-
-    function renderActivities() {
-        const activityList = document.getElementById('activity-list');
-        activityList.innerHTML = '';
-
-        activities.sort((a, b) => a.time.localeCompare(b.time)).forEach((activity, index) => {
-            const activityContainer = document.createElement('div');
-            activityContainer.className = 'activity-container';
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = activity.completed;
-            checkbox.onchange = () => toggleActivity(index);
-
-            const activityText = document.createElement('span');
-            activityText.textContent = `${activity.time} ${activity.activityText}`;
-
-            const note = document.createElement('span');
-            note.className = 'note';
-            note.textContent = activity.note;
-
-            const noteButton = document.createElement('button');
-            noteButton.textContent = 'Añadir Nota';
-            noteButton.onclick = () => addNoteToActivity(index);
-
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Eliminar';
-            deleteButton.onclick = () => removeActivity(index);
-
-            activityContainer.appendChild(checkbox);
-            activityContainer.appendChild(activityText);
-            activityContainer.appendChild(note);
-            activityContainer.appendChild(noteButton);
-            activityContainer.appendChild(deleteButton);
-
-            activityList.appendChild(activityContainer);
+        // Add day names
+        const dayNames = ["Sunday", "Monday", "Tuesday", "Wednes", "Thursday", "Friday", "Saturday"];
+        dayNames.forEach(dayName => {
+            daysHTML += `<th class="day-name">${dayName}</th>`;
         });
+        daysHTML += "</tr><tr>";
 
-        updateProgress();
+        // Add empty cells for days before the start of the month
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            daysHTML += "<td></td>";
+        }
+
+        // Add days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const noteKey = `${currentYear}-${currentMonth + 1}-${day}`;
+            const hasNote = notes[noteKey] ? true : false;
+            const isToday = isCurrentMonth && day === today;
+            const bgColor = hasNote ? "white" : isToday ? "cyan" : "white";
+            
+            daysHTML += `<td style="background-color: ${bgColor};"><a href="activities_habits.html?day=${day}">${day}</a>
+                            <div class="daily-note" id="note-${day}">
+                                ${notes[noteKey] || ''}
+                                ${hasNote ? `<button onclick="deleteNote(${day})" class="delete-btn">X</button>` : ''}
+                            </div>
+                        </td>`;
+            if ((firstDayOfMonth + day) % 7 === 0) {
+                daysHTML += "</tr><tr>";
+            }
+        }
+        daysHTML += "</tr>";
+        calendar.innerHTML = daysHTML;
+
+        document.getElementById('month-year').textContent = `${getMonthName(currentMonth)} ${currentYear}`;
+
+        document.getElementById('prev-month').disabled = (currentYear === new Date().getFullYear() && currentMonth === new Date().getMonth());
+        document.getElementById('next-month').disabled = false;
     }
 
-    function updateProgress() {
-        const completedActivities = activities.filter(activity => activity.completed).length;
-        const totalActivities = activities.length;
-        const progressPercentage = totalActivities ? (completedActivities / totalActivities) * 100 : 0;
-        document.getElementById('progress-bar').style.width = progressPercentage + '%';
+    function getMonthName(month) {
+        return new Date(currentYear, month).toLocaleString('en-US', { month: 'long' });
     }
 
-    renderActivities();
+    function changeMonth(offset) {
+        currentMonth += offset;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        } else if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderCalendar();
+    }
+
+    function promptForDay() {
+        const day = prompt("Enter the day you want to add a note to (1-31):");
+        const noteInput = document.getElementById('daily-note-input');
+        const noteText = noteInput.value;
+
+        if (day && noteText && day >= 1 && day <= new Date(currentYear, currentMonth + 1, 0).getDate()) {
+            const noteKey = `${currentYear}-${currentMonth + 1}-${day}`;
+            notes[noteKey] = noteText;
+            localStorage.setItem('notes', JSON.stringify(notes));
+            renderCalendar();
+            noteInput.value = ''; // Clear the input after adding note
+        } else {
+            alert("Invalid day or note text.");
+        }
+    }
+
+    function deleteNote(day) {
+        const noteKey = `${currentYear}-${currentMonth + 1}-${day}`;
+        delete notes[noteKey];
+        localStorage.setItem('notes', JSON.stringify(notes));
+        renderCalendar();
+    }
+
+    renderCalendar();
 </script>
 
 </body>
