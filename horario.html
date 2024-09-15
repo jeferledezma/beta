@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Añadir Horario</title>
-    <link rel="stylesheet" href="horario.css">
+    <link rel="stylesheet" href="horariosa.css">
 </head>
 <body>
 
@@ -15,14 +15,16 @@
 
 <form id="schedule-form">
     <div id="schedule-inputs"></div>
-    <button type="button" onclick="addSchedule()">AGREGAR TODO EL HORARIO</button>
-</form>
-<p>No se agregaran actividaddes sin Nombre</p>
+  <center>  <button type="button" onclick="addSchedule()">AGREGAR TODO EL HORARIO</button></center>
+    <p>El poder de los hábitos radica en su capacidad para dar forma a nuestra vida de forma inconsciente</p>
 
-<div class="add-activity-container">
+</form>
+
+<div class="add-activity-container"><br>
+    <a>Agrega mas Actividades</a><br><br>
     <input type="time" id="new-time-input" value="00:00">
     <input type="text" id="new-activity-input" placeholder="Agregar Actividades">
-    <button type="button" id="add-activity-button">Agregar Actividad</button>
+    <button type="button" id="add-activity-button">AGREGAR ACTIVIDAD</button>
 </div>
 
 <script>
@@ -36,7 +38,7 @@
 
     // Actividades predeterminadas
     const defaultActivities = [
-        { time: '07:00', activityText: 'Preparar desayuno - Desayunar' },
+        { time: '07:00', activityText: 'Desayunar' },
         { time: '12:00', activityText: 'Almorzar' },
         { time: '20:00', activityText: 'Cenar' },
         { time: '21:00', activityText: 'Leer' },
